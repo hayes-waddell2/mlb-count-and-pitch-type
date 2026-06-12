@@ -1,5 +1,82 @@
 ---
 title: "data-loading-and-cleaning"
+author: "Hayes Waddell"
 output: html_document
 ---
+
+# Data Loading
+
+## Function to clean individual data sets grouped by pitch type and count.
+
+- filepath: string of path to data set
+- count_label: string of the count for that data set
+
+This function removes unwanted columns, groups by pitch type and aggregates kept columns, and mutates whiffs and swings into rate stats.
+```{r}
+# load necessary library
+library(dplyr)
+
+# clean data
+clean_count_data <- function(filepath, count_label) {
+  read.csv(filepath) %>%
+    select(pitch_type, pitches, whiffs, swings, xwoba) %>%
+    filter(!is.na(xwoba)) %>%
+    group_by(pitch_type) %>%
+    summarise(
+      pitches = sum(pitches),
+      whiffs  = sum(whiffs),
+      swings  = sum(swings),
+      xwoba   = mean(xwoba)
+    ) %>%
+    filter(pitches > 50) %>%
+    mutate(
+      count      = count_label,
+      whiff_rate = whiffs / swings,
+      swing_rate = swings / pitches,
+    ) %>%
+    select(-whiffs, -swings)
+}
+```
+
+## Load and clean individual data sets for each count
+
+```{r}
+# load data
+df_00 <- clean_count_data("data/raw/25_0-0.csv", "0-0")
+df_01 <- clean_count_data("data/raw/25_0-1.csv", "0-1")
+df_02 <- clean_count_data("data/raw/25_0-2.csv", "0-2")
+df_10 <- clean_count_data("data/raw/25_1-0.csv", "1-0")
+df_11 <- clean_count_data("data/raw/25_1-1.csv", "1-1")
+df_12 <- clean_count_data("data/raw/25_1-2.csv", "1-2")
+df_20 <- clean_count_data("data/raw/25_2-0.csv", "2-0")
+df_21 <- clean_count_data("data/raw/25_2-1.csv", "2-1")
+df_22 <- clean_count_data("data/raw/25_2-2.csv", "2-1")
+df_30 <- clean_count_data("data/raw/25_3-0.csv", "3-0")
+df_31 <- clean_count_data("data/raw/25_3-1.csv", "3-1")
+df_32 <- clean_count_data("data/raw/25_3-2.csv", "3-2")
+```
+
+## Join into one data set
+
+```{r}
+# join all count data sets into one long data set
+df_combined <- bind_rows(df_00, df_01, df_02, df_10, df_11, df_12, df_20, df_21, df_22, df_30, df_31, df_32)
+```
+
+## Save all new data sets to csv in data/clean/
+
+```{r}
+datasets <- list(
+  "00" = df_00, "01" = df_01, "02" = df_02,
+  "10" = df_10, "11" = df_11, "12" = df_12,
+  "20" = df_20, "21" = df_21, "22" = df_22,
+  "30" = df_30, "31" = df_31, "32" = df_32
+)
+
+for (name in names(datasets)) {
+  write.csv(datasets[[name]], paste0("data/clean/", name, ".csv"), row.names = FALSE)
+}
+
+write.csv(df_combined, "data/clean/combined.csv", row.names = FALSE)
+```
 
