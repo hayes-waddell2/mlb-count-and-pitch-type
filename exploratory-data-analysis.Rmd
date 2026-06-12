@@ -1,5 +1,67 @@
 ---
 title: "exploratory-data-analysis"
+author: "Hayes Waddell"
 output: html_document
 ---
+
+# Exploratory Data Analysis
+
+Examine data set to understand its structure, patterns, quality.
+
+```{r}
+# examine structure
+glimpse(df_combined)
+```
+
+## xwOBA by pitch type and count
+
+```{r}
+# load necessary library
+library(ggplot2)
+
+# plot xwOBA by pitch type and xwOBA by count
+df_combined %>%
+  group_by(pitch_type) %>%
+  summarise(
+    xwoba_type = mean(xwoba),
+    type_total = sum(pitches)
+    ) %>%
+  ggplot(aes(x = pitch_type, y = xwoba_type, fill = type_total)) +
+  geom_col()
+
+df_combined %>%
+  group_by(count) %>%
+  summarise(
+    xwoba_count = mean(xwoba),
+    count_total = sum(pitches)
+  ) %>%
+  ggplot(aes(x = count, y = xwoba_count, fill = count_total)) +
+  geom_col()
+
+```
+
+## Whiff rate by pitch type, count, and swing rate
+
+```{r}
+# plot whiff rate by pitch type, count, and swing rate
+df_combined %>%
+  group_by(pitch_type) %>%
+  summarise(
+    whiff_type = mean(whiff_rate),
+    swing_type = mean(swing_rate)
+    ) %>%
+  ggplot(aes(x = pitch_type, y = whiff_type, fill = swing_type)) +
+  geom_col()
+
+df_combined %>%
+  group_by(count) %>%
+  summarise(
+    whiff_count = mean(whiff_rate),
+    swing_count = mean(swing_rate)
+  ) %>%
+  ggplot(aes(x = count, y = whiff_count, fill = swing_count)) +
+  geom_col() +
+  coord_cartesian(ylim = c(0.2, 0.35))
+```
+
 

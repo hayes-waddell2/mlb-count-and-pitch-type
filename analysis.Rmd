@@ -1,0 +1,52 @@
+---
+title: "analysis"
+author: "Hayes Waddell"
+output: html_document
+---
+
+# Analysis
+
+Finding the best pitch in the MLB 2025 season based on count.
+
+## 2-0 Changeup
+
+I once had a pitching coach tell me the 2-0 changeup is the best pitch in baseball, lets find out.
+
+```{r}
+# load necessary library
+library(tidyverse)
+
+# summarize league average stats
+lg_avg <- df_combined %>%
+  summarise(
+    xwoba = mean(xwoba),
+    whiff_rate = mean(whiff_rate),
+    swing_rate = mean(swing_rate)
+  ) %>%
+  mutate(label = "League Avg")
+
+# select 2-0 changup stats
+ch_20 <- df_combined %>%
+  filter(count == "2-0", pitch_type == "CH") %>%
+  select(xwoba, whiff_rate, swing_rate) %>%
+  mutate(label = "2-0 Changeup")
+
+# combine rows and plot
+p1 <- bind_rows(lg_avg, ch_20) %>%
+  pivot_longer(cols = c(xwoba, whiff_rate, swing_rate), 
+               names_to = "stat", values_to = "value") %>%
+  ggplot(aes(x = label, y = value, fill = stat)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.7, color = "black", linewidth = 0.5) +
+  labs(x = NULL, y = NULL, 
+       title = "2-0 Changeup vs League Average for all pitch types and counts") +
+  theme_minimal() +
+  theme(
+    panel.grid.major.x = element_blank(),
+    axis.text.x = element_text(face = "bold"),
+    panel.grid = element_line(color = "gray60")
+    )
+  
+# save plot to plots folder
+ggsave("plots/ch_20_vs_league.png", plot = p1, width = 8, height = 6, dpi = 300)
+```
+
